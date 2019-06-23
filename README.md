@@ -11,7 +11,7 @@
 </div>
 
 ## Get Started
-To use Riot.js in Node or with webpack, install it with
+To use Riot.js in Node.js or with Webpack, install it with
 ```bash
 npm install --save riot.js
 ```
