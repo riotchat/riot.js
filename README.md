@@ -13,7 +13,7 @@
 ## Get Started
 
 ## Documentation
-For a full, detailed documentation about Riot.js can be found on our [developer portal](https://riotchat.gq/developers).
+For a full, detailed documentation about Riot.js can be found on our <a href="https://riotchat.gq/developers/documentation/riot-js" target="_blank">developer portal</a>.
 
 ## License
 Riot.js is licensed under the [Apache License 2.0](/LICENSE)
