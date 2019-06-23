@@ -1,0 +1,12 @@
+{
+  "name": "riot.js",
+  "version": "0.1.0",
+  "description": "A library for interacting with the Riot API, designed after Discord.js",
+  "main": "dist/index.js",
+  "repository": "https://github.com/riotchat/riot.js.git",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "ky": "^0.11.1",
+    "ws": "^7.0.1"
+  }
+}
