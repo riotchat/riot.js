@@ -3,7 +3,9 @@
 	<br>
 	<br>
 	<p align="center">
+		<a href="https://riotchat.gq/developers/documentation/riot-js">
 		<img height="100" src="https://raw.githubusercontent.com/riotchat/assets/master/images/riot.js-light.svg?sanitize=true" alt="Riot.js">
+		</a>
 	</p>
 	<p align="center">A library for interacting with the Riot API, designed after Discord.js</p>
 	<br>
