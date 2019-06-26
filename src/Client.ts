@@ -1,10 +1,14 @@
-import got from 'got';
+import { GotUrl } from 'got';
 import WebSocket from 'ws';
+import { defaultsDeep } from 'lodash';
 
 import { TypedEventEmitter } from '@elderapo/typed-event-emitter';
 
 import * as IAuth from './api/v1/auth';
-import get, { ENDPOINT } from './util/get';
+import get, { ENDPOINT, Options } from './util/get';
+
+import { Channel } from './internal/Channel';
+import { User } from './internal/User';
 
 interface ClientEvents {
 	connected: void
@@ -14,7 +18,27 @@ type Login2FA = (code: number) => Promise<void>;
 
 export class Client extends TypedEventEmitter<ClientEvents> {
 
-	ws?: WebSocket;
+	private accessToken?: string;
+	private ws?: WebSocket;
+
+	channels: Map<string, Channel>;
+	users: Map<string, User>;
+
+	constructor() {
+		super();
+
+		this.channels = new Map();
+		this.users = new Map();
+	}
+
+	get(url: GotUrl, opt: Options = {}) {
+		console.debug('[fetching ' + url + ']');
+		return get(url, defaultsDeep(opt, {
+			headers: {
+				Authorization: this.accessToken
+			}
+		}));
+	}
 
 	async login(email: string, password: string): Promise<void | Login2FA>;
 	async login(token: string): Promise<void>;
@@ -47,14 +71,46 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 					});
 
 					let body: IAuth.Authenticate2FA = res.body;
-
-					console.log(body);
+					this.accessToken = body.accessToken;
+					this.sync();
 				};
 			} else {
-				// logged in
+				this.accessToken = body.accessToken;
+				this.sync();
 			}
 		} else {
 			// TOKEN
 		}
 	}
+
+	private async sync() {
+		let dms = await this.get('/users/@me/channels');
+		let channels: {id: string, user: string}[] = dms.body;
+
+		for (let i=0;i<channels.length;i++) {
+			let raw = channels[i];
+			await this.fetchChannel(raw.id);
+		}
+	}
+
+	async fetchChannel(id: string) {
+		let channel = this.channels.get(id);
+		if (channel) return channel;
+
+		channel = await Channel.from(this, id);
+		this.channels.set(id, channel);
+
+		return channel;
+	}
+
+	async fetchUser(id: string) {
+		let user = this.users.get(id);
+		if (user) return user;
+
+		user = await User.from(this, id);
+		this.users.set(id, user);
+
+		return user;
+	}
+
 };
