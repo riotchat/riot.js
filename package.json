@@ -9,12 +9,15 @@
     "@elderapo/typed-event-emitter": "^1.5.1",
     "@types/got": "^9.6.0",
     "got": "^9.6.0",
+    "lodash": "^4.17.11",
     "ws": "^7.0.1"
   },
   "scripts": {
     "dev": "echo You probably shouldn't use this. && tsc-watch --onSuccess \"node .\""
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.134",
+    "@types/ws": "^6.0.1",
     "tsc-watch": "^2.2.1",
     "typescript": "^3.5.2"
   }
