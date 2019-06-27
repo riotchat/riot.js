@@ -9,9 +9,12 @@ import get, { ENDPOINT, Options } from './util/get';
 
 import { Channel } from './internal/Channel';
 import { User } from './internal/User';
+import { Packets } from './api/ws/v1';
+import { Message } from './internal/Message';
 
 interface ClientEvents {
-	connected: void
+	connected: void,
+	message: Message
 };
 
 type Login2FA = (code: number) => Promise<void>;
@@ -20,6 +23,8 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 
 	private accessToken?: string;
 	private ws?: WebSocket;
+
+	user: User;
 
 	channels: Map<string, Channel>;
 	users: Map<string, User>;
@@ -40,15 +45,20 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		}));
 	}
 
+	private async handle(packet: Packets) {
+		if (packet.type === 'messageCreate') {
+			this.emit('message', await Message.from(this, packet.id, packet.content, packet.channel, packet.author));
+		}
+	}
+
 	async login(email: string, password: string): Promise<void | Login2FA>;
 	async login(token: string): Promise<void>;
 	
 	async login(id: string, password?: string): Promise<void | Login2FA> {
 		this.ws = new WebSocket('ws://' + ENDPOINT + '/ws');
-
-		this.ws.on('message', (msg) => {
-			console.log(msg);
-		});
+		this.ws.on('message', msg => this.handle(
+			JSON.parse(msg as string))
+		);
 
 		if (password) {
 			let res = await get('/auth/authenticate', {
@@ -84,6 +94,8 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 	}
 
 	private async sync() {
+		this.user = await this.fetchUser('@me');
+
 		let dms = await this.get('/users/@me/channels');
 		let channels: {id: string, user: string}[] = dms.body;
 
@@ -91,6 +103,8 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 			let raw = channels[i];
 			await this.fetchChannel(raw.id);
 		}
+
+		this.emit('connected', undefined);
 	}
 
 	async fetchChannel(id: string) {
@@ -104,6 +118,8 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 	}
 
 	async fetchUser(id: string) {
+		if (this.user && id == this.user.id) id = '@me';
+
 		let user = this.users.get(id);
 		if (user) return user;
 

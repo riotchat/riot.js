@@ -18,7 +18,7 @@ export class User {
 		let res = await client.get(`/users/${id}`);
 		let body: IUser = res.body;
 
-		let user = new User(body.username, id);
+		let user = new User(body.username, body.id);
 		user.status = body.status;
 		user.avatarURL = body.avatarURL;
 

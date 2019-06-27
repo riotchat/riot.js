@@ -13,7 +13,7 @@
     "ws": "^7.0.1"
   },
   "scripts": {
-    "dev": "echo You probably shouldn't use this. && tsc-watch --onSuccess \"node .\""
+    "dev": "tsc-watch --onSuccess \"node dist/test.js\""
   },
   "devDependencies": {
     "@types/lodash": "^4.14.134",
