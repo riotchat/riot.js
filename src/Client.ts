@@ -1,4 +1,3 @@
-import { GotUrl } from 'got';
 import WebSocket from 'ws';
 import { defaultsDeep } from 'lodash';
 
@@ -37,7 +36,7 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		this.users = new Map();
 	}
 
-	get(url: GotUrl, opt: Options = {}) {
+	get(url: string, opt: Options = {}) {
 		console.debug('[fetching ' + url + ']');
 		return get(url, defaultsDeep(opt, {
 			headers: {
@@ -63,25 +62,25 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 
 		if (password) {
 			let res = await get('/auth/authenticate', {
-				body: {
+				params: {
 					email: id,
 					password
 				}
 			});
 
-			let body: IAuth.Authenticate = res.body;
+			let body: IAuth.Authenticate = res.data;
 
 			if (body.do2FA) {
 				let token = body.token;
 				return async (code: number) => {
 					let res = await get('/auth/2fa', {
-						body: {
+						params: {
 							token,
 							code
 						}
 					});
 
-					let body: IAuth.Authenticate2FA = res.body;
+					let body: IAuth.Authenticate2FA = res.data;
 					this.accessToken = body.accessToken;
 					this.sync();
 				};
@@ -98,7 +97,7 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		this.user = await this.fetchUser('@me');
 
 		let dms = await this.get('/users/@me/channels');
-		let channels: {id: string, user: string}[] = dms.body;
+		let channels: {id: string, user: string}[] = dms.data;
 
 		for (let i=0;i<channels.length;i++) {
 			let raw = channels[i];
