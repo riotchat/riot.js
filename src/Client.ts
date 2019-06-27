@@ -10,6 +10,7 @@ import { Channel } from './internal/Channel';
 import { User } from './internal/User';
 import { Packets } from './api/ws/v1';
 import { Message } from './internal/Message';
+import { AxiosResponse } from 'axios';
 
 interface ClientEvents {
 	connected: void,
@@ -36,7 +37,7 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		this.users = new Map();
 	}
 
-	get(url: string, opt: Options = {}) {
+	get(url: string, opt: Options = {}): Promise<AxiosResponse> {
 		console.debug('[fetching ' + url + ']');
 		return get(url, defaultsDeep(opt, {
 			headers: {
@@ -89,7 +90,8 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 				this.sync();
 			}
 		} else {
-			// TOKEN
+			this.accessToken = id;
+			this.sync();
 		}
 	}
 
