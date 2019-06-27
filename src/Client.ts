@@ -23,7 +23,8 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 
 	private accessToken?: string;
 	private ws?: WebSocket;
-
+	
+	cacheMessages: boolean = true;
 	user: User;
 
 	channels: Map<string, Channel>;

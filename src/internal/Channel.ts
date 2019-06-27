@@ -1,4 +1,4 @@
-import { ChannelType, Channel as IChannel, SendMessage } from '../api/v1/channels';
+import { ChannelType, Channel as IChannel, SendMessage, GetMessages } from '../api/v1/channels';
 import { Client } from '../Client';
 import { User } from './User';
 import { Message } from './Message';
@@ -9,6 +9,8 @@ export class Channel {
 
 	type: ChannelType;
 	id: string;
+
+	messages?: Map<string, Message>;
 
 	// group + guild
 	description?: string;
@@ -34,6 +36,10 @@ export class Channel {
 		let channel = new Channel(body.type, id);
 		channel.client = client;
 
+		if (client.cacheMessages) {
+			channel.messages = new Map();			
+		}
+
 		if (body.type == ChannelType.DM) {
 			channel.users = [
 				await client.fetchUser(body.users[0]),
@@ -57,6 +63,20 @@ export class Channel {
 		message.channel = this;
 
 		return message;
+	}
+
+	async fetchMessages() {
+		let messages: Message[] = [];
+
+		let res = await this.client.get(`/channels/${this.id}/messages`);
+		let body: GetMessages = res.body;
+
+		for (let i=0;i<body.length;i++) {
+			let m = body[i];
+			messages.push(await Message.from(this.client, m.id, m.content, m.channel, m.author));
+		}
+
+		return messages;
 	}
 
 };

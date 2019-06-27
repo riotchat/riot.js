@@ -20,6 +20,12 @@ export class Message {
 		let message = new Message(id, content);
 		message.channel = await client.fetchChannel(channel);
 		message.author = await client.fetchUser(user);
+
+		let msgs = message.channel.messages;
+		if (msgs) {
+			msgs.set(id, message);
+		}
+
 		return message;
 	}
 
