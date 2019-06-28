@@ -15,7 +15,7 @@ export class User {
 	}
 
 	static async from(client: Client, id: string) {
-		let res = await client.get(`/users/${id}`);
+		let res = await client.fetch('get', `/users/${id}`);
 		let body: IUser = res.data;
 
 		let user = new User(body.username, body.id);

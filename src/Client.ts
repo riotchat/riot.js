@@ -4,13 +4,13 @@ import { defaultsDeep } from 'lodash';
 import { TypedEventEmitter } from '@elderapo/typed-event-emitter';
 
 import * as IAuth from './api/v1/auth';
-import get, { ENDPOINT, Options } from './util/get';
+import get, { ENDPOINT } from './util/fetch';
 
 import { Channel } from './internal/Channel';
 import { User } from './internal/User';
 import { Packets } from './api/ws/v1';
 import { Message } from './internal/Message';
-import { AxiosResponse } from 'axios';
+import { AxiosResponse, AxiosRequestConfig } from 'axios';
 
 interface ClientEvents {
 	connected: void,
@@ -37,9 +37,9 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		this.users = new Map();
 	}
 
-	get(url: string, opt: Options = {}): Promise<AxiosResponse> {
+	fetch(method: 'get' | 'post', url: string, opt: AxiosRequestConfig = {}): Promise<AxiosResponse> {
 		console.debug('[fetching ' + url + ']');
-		return get(url, defaultsDeep(opt, {
+		return get(method, url, defaultsDeep(opt, {
 			headers: {
 				Authorization: this.accessToken
 			}
@@ -62,8 +62,8 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		);
 
 		if (password) {
-			let res = await get('/auth/authenticate', {
-				params: {
+			let res = await get('post', '/auth/authenticate', {
+				data: {
 					email: id,
 					password
 				}
@@ -74,8 +74,8 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 			if (body.do2FA) {
 				let token = body.token;
 				return async (code: number) => {
-					let res = await get('/auth/2fa', {
-						params: {
+					let res = await get('post', '/auth/2fa', {
+						data: {
 							token,
 							code
 						}
@@ -98,7 +98,7 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 	private async sync() {
 		this.user = await this.fetchUser('@me');
 
-		let dms = await this.get('/users/@me/channels');
+		let dms = await this.fetch('get', '/users/@me/channels');
 		let channels: {id: string, user: string}[] = dms.data;
 
 		for (let i=0;i<channels.length;i++) {

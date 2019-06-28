@@ -30,7 +30,7 @@ export class Channel {
 	}
 
 	static async from(client: Client, id: string) {
-		let res = await client.get(`/channels/${id}`);
+		let res = await client.fetch('get', `/channels/${id}`);
 		let body: IChannel = res.data;
 
 		let channel = new Channel(body.type, id);
@@ -51,7 +51,7 @@ export class Channel {
 	}
 
 	async send(content: string) {
-		let res = await this.client.get(`/channels/${this.id}/messages`, {
+		let res = await this.client.fetch('get', `/channels/${this.id}/messages`, {
 			params: {
 				content
 			}
@@ -68,7 +68,7 @@ export class Channel {
 	async fetchMessages() {
 		let messages: Message[] = [];
 
-		let res = await this.client.get(`/channels/${this.id}/messages`);
+		let res = await this.client.fetch('get', `/channels/${this.id}/messages`);
 		let body: GetMessages = res.data;
 
 		for (let i=0;i<body.length;i++) {
