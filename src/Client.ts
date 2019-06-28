@@ -1,6 +1,6 @@
-import WebSocket from 'ws';
 import { defaultsDeep } from 'lodash';
-
+import WebSocket from 'isomorphic-ws';
+import { AxiosResponse, AxiosRequestConfig } from 'axios';
 import { TypedEventEmitter } from '@elderapo/typed-event-emitter';
 
 import * as IAuth from './api/v1/auth';
@@ -10,7 +10,6 @@ import { Channel } from './internal/Channel';
 import { User } from './internal/User';
 import { Packets } from './api/ws/v1';
 import { Message } from './internal/Message';
-import { AxiosResponse, AxiosRequestConfig } from 'axios';
 
 interface ClientEvents {
 	connected: void,
@@ -57,8 +56,8 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 	
 	async login(id: string, password?: string): Promise<void | Login2FA> {
 		this.ws = new WebSocket('ws://' + ENDPOINT + '/ws');
-		this.ws.on('message', msg => this.handle(
-			JSON.parse(msg as string))
+		this.ws.onmessage = ev => this.handle(
+			JSON.parse(ev.data as string)
 		);
 
 		if (password) {

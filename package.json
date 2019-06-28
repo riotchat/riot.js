@@ -1,6 +1,6 @@
 {
-  "name": "riot.js",
-  "version": "0.0.1",
+  "name": "riotchat.js",
+  "version": "0.0.2",
   "description": "A library for interacting with the Riot API",
   "main": "dist/index.js",
   "repository": "https://github.com/riotchat/riot.js.git",
@@ -8,8 +8,8 @@
   "dependencies": {
     "@elderapo/typed-event-emitter": "^1.5.1",
     "axios": "^0.19.0",
-    "lodash": "^4.17.11",
-    "ws": "^7.0.1"
+    "isomorphic-ws": "^4.0.1",
+    "lodash": "^4.17.11"
   },
   "scripts": {
     "dev": "tsc-watch --onSuccess \"node dist/test.js\""
