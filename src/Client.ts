@@ -4,12 +4,14 @@ import { AxiosResponse, AxiosRequestConfig } from 'axios';
 import { TypedEventEmitter } from '@elderapo/typed-event-emitter';
 
 import * as IAuth from './api/v1/auth';
-import get, { ENDPOINT } from './util/fetch';
+import * as IUser from './api/v1/users';
+import get from './util/fetch';
 
 import { Channel } from './internal/Channel';
 import { User } from './internal/User';
 import { Packets } from './api/ws/v1';
 import { Message } from './internal/Message';
+import Collection from './util/Collection';
 
 interface ClientEvents {
 	connected: void,
@@ -21,20 +23,22 @@ type Login2FA = (code: number) => Promise<void>;
 
 export class Client extends TypedEventEmitter<ClientEvents> {
 
-	accessToken?: string;
 	private ws?: WebSocket;
 	
 	cacheMessages: boolean = true;
+	accessToken?: string;
 	user: User;
 
-	channels: Map<string, Channel>;
-	users: Map<string, User>;
+	private knownUsers: Collection<string, IUser.FriendType>;
+	channels: Collection<string, Channel>;
+	users: Collection<string, User>;
 
 	constructor() {
 		super();
 
-		this.channels = new Map();
-		this.users = new Map();
+		this.knownUsers = new Collection();
+		this.channels = new Collection();
+		this.users = new Collection();
 	}
 
 	fetch(method: 'get' | 'post', url: string, opt: AxiosRequestConfig = {}): Promise<AxiosResponse> {
@@ -100,6 +104,7 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		);
 		
 		this.user = await this.fetchUser('@me');
+		await this.fetchFriends();
 
 		let dms = await this.fetch('get', '/users/@me/channels');
 		let channels: {id: string, user: string}[] = dms.data;
@@ -132,6 +137,33 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		this.users.set(id, user);
 
 		return user;
+	}
+
+	async fetchFriends() {
+		let req = await this.fetch('get', '/users/@me/friends');
+		let body: IUser.Friends = req.data;
+
+		let users: User[] = [];
+		for (let i=0;i<body.length;i++) {
+			let entry = body[i];
+			this.knownUsers.set(entry.user, entry.type);
+			users.push(await this.fetchUser(entry.user));
+		}
+
+		return users;
+	}
+
+	getFriendStatus(userId: string): IUser.FriendType {
+		if (!this.user || userId === this.user.id) {
+			return 'self';
+		}
+
+		let type = this.knownUsers.get(userId);
+		if (type) {
+			return type;
+		}
+
+		return 'unknown';
 	}
 
 };

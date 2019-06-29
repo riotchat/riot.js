@@ -2,6 +2,7 @@ import { ChannelType, Channel as IChannel, SendMessage, GetMessages } from '../a
 import { Client } from '../Client';
 import { User } from './User';
 import { Message } from './Message';
+import Collection from '../util/Collection';
 
 export class Channel {
 
@@ -10,7 +11,7 @@ export class Channel {
 	type: ChannelType;
 	id: string;
 
-	messages?: Map<string, Message>;
+	messages?: Collection<string, Message>;
 
 	// group + guild
 	description?: string;
@@ -37,7 +38,7 @@ export class Channel {
 		channel.client = client;
 
 		if (client.cacheMessages) {
-			channel.messages = new Map();			
+			channel.messages = new Collection();			
 		}
 
 		if (body.type == ChannelType.DM) {

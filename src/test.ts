@@ -2,7 +2,10 @@ import { Client } from './Client';
 
 let client = new Client();
 
-client.on('connected', () => console.log('Logged in as: ' + client.user.username));
+client.on('connected', () => {
+	console.log('Logged in as: ' + client.user.username);
+	client.users.forEach((user) => console.log(`${user.username} is ${user.relation}`));
+});
 
 client.on('message', (msg) => {
 	console.log(`[MESSAGE] ${msg.content} in ${msg.channel.id} from ${msg.author.id}`);

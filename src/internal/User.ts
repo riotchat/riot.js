@@ -1,10 +1,11 @@
-import { User as IUser, Status } from '../api/v1/users';
+import { User as IUser, Status, FriendType } from '../api/v1/users';
 import { Client } from '../Client';
 
 export class User {
 
 	username: string;
 	id: string;
+	relation: FriendType;
 
 	status?: Status;
 	avatarURL?: string;
@@ -12,6 +13,7 @@ export class User {
 	constructor(username: string, id: string) {
 		this.username = username;
 		this.id = id;
+		this.relation = 'unknown';
 	}
 
 	static async from(client: Client, id: string) {
@@ -21,6 +23,7 @@ export class User {
 		let user = new User(body.username, body.id);
 		user.status = body.status;
 		user.avatarURL = body.avatarURL;
+		user.relation = client.getFriendStatus(user.id);
 
 		return user;
 	}
