@@ -9,7 +9,7 @@ import get from './util/fetch';
 
 import { Channel } from './internal/Channel';
 import { User } from './internal/User';
-import { Packets } from './api/ws/v1';
+import { Packets, ClientPackets } from './api/ws/v1';
 import { Message } from './internal/Message';
 import Collection from './util/Collection';
 
@@ -21,9 +21,13 @@ interface ClientEvents {
 
 type Login2FA = (code: number) => Promise<void>;
 
+interface RiotSocket extends WebSocket {
+	sendPacket: (packets: ClientPackets) => void
+};
+
 export class Client extends TypedEventEmitter<ClientEvents> {
 
-	private ws?: WebSocket;
+	private ws?: RiotSocket;
 	
 	cacheMessages: boolean = true;
 	accessToken?: string;
@@ -98,8 +102,10 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 	private async sync(accessToken?: string) {
 		if (accessToken) this.accessToken = accessToken;
 
-		this.ws = new WebSocket('ws://' + '86.11.153.158:3000' /*ENDPOINT*/ + '/ws');
-		this.ws.onmessage = ev => this.handle(
+		let ws = <RiotSocket> new WebSocket('ws://' + '86.11.153.158:3000' /*ENDPOINT*/ + '/ws');
+		ws.sendPacket = data => ws.send(JSON.stringify(data));
+		ws.onopen = $ => ws.sendPacket({ type: 'authenticate', token: <string> this.accessToken });
+		ws.onmessage = ev => this.handle(
 			JSON.parse(ev.data as string)
 		);
 		
