@@ -2,9 +2,14 @@ import { Client } from './Client';
 
 let client = new Client();
 
-client.on('connected', () => {
+client.on('connected', async () => {
 	console.log('Logged in as: ' + client.user.username);
-	client.users.forEach((user) => console.log(`${user.username} is ${user.relation}`));
+
+	let fatal = await client.fetchUser('01DEHHQXBCF4YSV91K9F1FT4KK');
+	try { await fatal.addFriend(); } catch (e) {}
+	try { await fatal.removeFriend(); } catch (e) {}
+
+	//client.users.forEach((user) => console.log(`${user.username} is ${user.relation}`));
 });
 
 client.on('message', (msg) => {

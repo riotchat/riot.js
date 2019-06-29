@@ -41,7 +41,7 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		this.users = new Collection();
 	}
 
-	fetch(method: 'get' | 'post', url: string, opt: AxiosRequestConfig = {}): Promise<AxiosResponse> {
+	fetch(method: 'get' | 'post' | 'delete', url: string, opt: AxiosRequestConfig = {}): Promise<AxiosResponse> {
 		console.debug('[fetching ' + url + ']');
 		return get(method, url, defaultsDeep(opt, {
 			headers: {
