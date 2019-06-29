@@ -51,8 +51,8 @@ export class Channel {
 	}
 
 	async send(content: string) {
-		let res = await this.client.fetch('get', `/channels/${this.id}/messages`, {
-			params: {
+		let res = await this.client.fetch('post', `/channels/${this.id}/messages`, {
+			data: {
 				content
 			}
 		});

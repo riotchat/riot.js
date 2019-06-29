@@ -13,14 +13,15 @@ import { Message } from './internal/Message';
 
 interface ClientEvents {
 	connected: void,
-	message: Message
+	message: Message,
+	error: Error | string
 };
 
 type Login2FA = (code: number) => Promise<void>;
 
 export class Client extends TypedEventEmitter<ClientEvents> {
 
-	private accessToken?: string;
+	accessToken?: string;
 	private ws?: WebSocket;
 	
 	cacheMessages: boolean = true;
@@ -55,46 +56,49 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 	async login(token: string): Promise<void>;
 	
 	async login(id: string, password?: string): Promise<void | Login2FA> {
-		this.ws = new WebSocket('ws://' + ENDPOINT + '/ws');
-		this.ws.onmessage = ev => this.handle(
-			JSON.parse(ev.data as string)
-		);
+		try {
+			if (password) {
+				let res = await get('post', '/auth/authenticate', {
+					data: {
+						email: id,
+						password
+					}
+				});
 
-		if (password) {
-			let res = await get('post', '/auth/authenticate', {
-				data: {
-					email: id,
-					password
+				let body: IAuth.Authenticate = res.data;
+
+				if (body.do2FA) {
+					let token = body.token;
+					return async (code: number) => {
+						let res = await get('post', '/auth/2fa', {
+							data: {
+								token,
+								code
+							}
+						});
+
+						let body: IAuth.Authenticate2FA = res.data;
+						this.sync(body.accessToken);
+					};
+				} else {
+					this.sync(body.accessToken);
 				}
-			});
-
-			let body: IAuth.Authenticate = res.data;
-
-			if (body.do2FA) {
-				let token = body.token;
-				return async (code: number) => {
-					let res = await get('post', '/auth/2fa', {
-						data: {
-							token,
-							code
-						}
-					});
-
-					let body: IAuth.Authenticate2FA = res.data;
-					this.accessToken = body.accessToken;
-					this.sync();
-				};
 			} else {
-				this.accessToken = body.accessToken;
-				this.sync();
+				this.sync(id);
 			}
-		} else {
-			this.accessToken = id;
-			this.sync();
+		} catch (e) {
+			this.emit('error', e);
 		}
 	}
 
-	private async sync() {
+	private async sync(accessToken?: string) {
+		if (accessToken) this.accessToken = accessToken;
+
+		this.ws = new WebSocket('ws://' + '86.11.153.158:3000' /*ENDPOINT*/ + '/ws');
+		this.ws.onmessage = ev => this.handle(
+			JSON.parse(ev.data as string)
+		);
+		
 		this.user = await this.fetchUser('@me');
 
 		let dms = await this.fetch('get', '/users/@me/channels');

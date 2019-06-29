@@ -11,4 +11,7 @@ client.on('message', (msg) => {
 	}
 });
 
-client.login('fatalbad@riot.epic', 'yeet');
+client.on('error', err => console.error(err));
+
+//client.login('fatalbad@riot.epic', 'yeet');
+client.login('BHo1wvYp3CF7AOJeiRuvaSaJimCCsMMgLkKQgZf4jczYixNSC2D_NmpK7zfRZH8X');
