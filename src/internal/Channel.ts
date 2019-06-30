@@ -74,7 +74,7 @@ export class Channel {
 
 		for (let i=0;i<body.length;i++) {
 			let m = body[i];
-			messages.push(await Message.from(this.client, m.id, m.content, m.channel, m.author));
+			messages.push(await Message.from(this.client, m));
 		}
 
 		return messages;

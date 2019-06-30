@@ -5,11 +5,17 @@ let client = new Client();
 client.on('connected', async () => {
 	console.log('Logged in as: ' + client.user.username);
 
-	let fatal = await client.fetchUser('01DEHHQXBCF4YSV91K9F1FT4KK');
+	/*let fatal = await client.fetchUser('01DEHHQXBCF4YSV91K9F1FT4KK');
 	try { await fatal.addFriend(); } catch (e) {}
-	try { await fatal.removeFriend(); } catch (e) {}
+	try { await fatal.removeFriend(); } catch (e) {}*/
 
 	//client.users.forEach((user) => console.log(`${user.username} is ${user.relation}`));
+
+	let channel = client.channels.array()[0];
+	if (channel) {
+		let msgs = await channel.fetchMessages();
+		console.log(msgs);
+	}
 });
 
 client.on('message', (msg) => {

@@ -14,9 +14,11 @@ import { Message } from './internal/Message';
 import Collection from './util/Collection';
 
 interface ClientEvents {
-	connected: void,
-	message: Message,
+	connected: void
 	error: Error | string
+
+	message: Message
+	userUpdate: User
 };
 
 type Login2FA = (code: number) => Promise<void>;
@@ -46,7 +48,7 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 	}
 
 	fetch(method: 'get' | 'post' | 'delete', url: string, opt: AxiosRequestConfig = {}): Promise<AxiosResponse> {
-		console.debug('[fetching ' + url + ']');
+		console.debug('[fetch ' + method.toUpperCase() + ' ' + url + ']');
 		return get(method, url, defaultsDeep(opt, {
 			headers: {
 				Authorization: this.accessToken
@@ -55,8 +57,21 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 	}
 
 	private async handle(packet: Packets) {
-		if (packet.type === 'messageCreate') {
-			this.emit('message', await Message.from(this, packet.id, packet.content, packet.channel, packet.author));
+		switch (packet.type) {
+			case 'messageCreate':
+				{
+					this.emit('message', await Message.from(this, packet));
+				}
+				break;
+			case 'userUpdate':
+				{
+					let user = await this.fetchUser(packet.user);
+					user.relation = packet.relation || user.relation;
+					user.avatarURL = packet.avatarURL || user.avatarURL;
+
+					this.emit('userUpdate', user);
+				}
+				break;
 		}
 	}
 
