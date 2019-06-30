@@ -14,7 +14,7 @@ client.on('connected', async () => {
 	let channel = client.channels.array()[0];
 	if (channel) {
 		let msgs = await channel.fetchMessages();
-		console.log(msgs);
+		//msgs[0].edit('yeet');
 	}
 });
 

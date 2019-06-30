@@ -18,6 +18,8 @@ interface ClientEvents {
 	error: Error | string
 
 	message: Message
+	messageUpdate: Message
+
 	userUpdate: User
 };
 
@@ -60,7 +62,8 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		switch (packet.type) {
 			case 'messageCreate':
 				{
-					this.emit('message', await Message.from(this, packet));
+					let message = await Message.from(this, packet);
+					this.emit(message.createdAt === message.updatedAt ? 'message' : 'messageUpdate', message);
 				}
 				break;
 			case 'userUpdate':

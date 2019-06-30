@@ -1,4 +1,4 @@
-import { User as IUser, Status, FriendType, AddFriend, RemoveFriend } from '../api/v1/users';
+import { User as IUser, Status, FriendType, AddFriend, RemoveFriend, CreateDM } from '../api/v1/users';
 import { Client } from '../Client';
 
 export class User {
@@ -43,6 +43,17 @@ export class User {
 		let body: RemoveFriend = res.data;
 
 		this.relation = body.status;
+	}
+
+	async openDM() {
+		let res = await this.client.fetch('post', `/users/@me/channels`, {
+			data: {
+				recipient: this.id
+			}
+		});
+		let body: CreateDM = res.data;
+
+		return this.client.fetchChannel(body.id);
 	}
 
 };
