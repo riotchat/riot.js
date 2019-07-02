@@ -60,10 +60,10 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 
 	private async handle(packet: Packets) {
 		switch (packet.type) {
-			case 'messageCreate':
+			case 'message':
 				{
 					let message = await Message.from(this, packet);
-					this.emit(message.createdAt === message.updatedAt ? 'message' : 'messageUpdate', message);
+					this.emit(+message.createdAt === +message.updatedAt ? 'message' : 'messageUpdate', message);
 				}
 				break;
 			case 'userUpdate':

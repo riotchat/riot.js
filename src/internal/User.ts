@@ -5,10 +5,11 @@ export class User {
 
 	client: Client;
 
-	username: string;
 	id: string;
+	username: string;
 	relation: FriendType;
 
+	email?: string;
 	status?: Status;
 	avatarURL?: string;
 
@@ -24,6 +25,7 @@ export class User {
 
 		let user = new User(body.username, body.id);
 		user.client = client;
+		user.email = body.email;
 		user.status = body.status;
 		user.avatarURL = body.avatarURL;
 		user.relation = client.getFriendStatus(user.id);
