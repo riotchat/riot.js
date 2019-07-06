@@ -1,4 +1,4 @@
-import { User as IUser, Status, FriendType, AddFriend, RemoveFriend, CreateDM } from '../api/v1/users';
+import { User as IUser, Status, FriendType, AddFriend, RemoveFriend, CreateDM, UpdateUser } from '../api/v1/users';
 import { Client } from '../Client';
 
 export class User {
@@ -56,6 +56,20 @@ export class User {
 		let body: CreateDM = res.data;
 
 		return this.client.fetchChannel(body.id);
+	}
+
+	async setStatus(status: Omit<Status, 'offline'>) {
+		this.status = status as any;
+
+		let res = await this.client.fetch('put', `/users/@me`, {
+			data: {
+				status
+			}
+		});
+		let body: UpdateUser = res.data;
+
+		this.status = body.status;
+		return body.status;
 	}
 
 };

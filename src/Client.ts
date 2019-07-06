@@ -49,7 +49,7 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		this.users = new Collection();
 	}
 
-	fetch(method: 'get' | 'post' | 'delete', url: string, opt: AxiosRequestConfig = {}): Promise<AxiosResponse> {
+	fetch(method: 'get' | 'post' | 'put' | 'delete', url: string, opt: AxiosRequestConfig = {}): Promise<AxiosResponse> {
 		console.debug('[fetch ' + method.toUpperCase() + ' ' + url + ']');
 		return get(method, url, defaultsDeep(opt, {
 			headers: {
@@ -69,6 +69,7 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 			case 'userUpdate':
 				{
 					let user = await this.fetchUser(packet.user);
+					user.status = packet.status || user.status;
 					user.relation = packet.relation || user.relation;
 					user.avatarURL = packet.avatarURL || user.avatarURL;
 
