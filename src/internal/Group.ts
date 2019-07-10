@@ -26,7 +26,7 @@ export class Group {
 
 	static async from(client: Client, obj: string | IGroup): Promise<Group> {
 		if (typeof obj === 'string') {
-			let res = await client.fetch('get', `/users/@me/group/${obj}`);
+			let res = await client.fetch('get', `/users/@me/groups/${obj}`);
 			let body: IGroup = res.data;
 
 			return this.from(client, body);

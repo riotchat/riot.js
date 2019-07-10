@@ -47,6 +47,7 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 
 		this.channels = new Collection();
 		this.users = new Collection();
+		this.groups = new Collection();
 	}
 
 	fetch(method: 'get' | 'post' | 'put' | 'delete', url: string, opt: AxiosRequestConfig = {}): Promise<AxiosResponse> {
@@ -139,6 +140,12 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 			this.channels.set(channel.id, channel);
 		}
 
+		let groups = await this.fetch('get', '/users/@me/groups?sync=true');
+		for (let i=0;i<groups.data.length;i++) {
+			let group = await Group.from(this, groups.data[i]);
+			this.groups.set(group.id, group);
+		}
+
 		let ws = <RiotSocket> new WebSocket('ws://' + ENDPOINT);
 		ws.sendPacket = data => ws.send(JSON.stringify(data));
 		ws.onopen = $ => ws.sendPacket({ type: 'authenticate', token: <string> this.accessToken });
@@ -169,6 +176,16 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		this.users.set(id, user);
 
 		return user;
+	}
+
+	async fetchGroup(id: string) {
+		let group = this.groups.get(id);
+		if (group) return group;
+
+		group = await Group.from(this, id);
+		this.groups.set(id, group);
+
+		return group;
 	}
 
 	async fetchFriends(includeSelf: boolean = false) {
