@@ -30,21 +30,25 @@ export class Channel {
 		this.id = id;
 	}
 
-	static async from(client: Client, id: string) {
-		let res = await client.fetch('get', `/channels/${id}`);
-		let body: IChannel = res.data;
+	static async from(client: Client, obj: string | IChannel): Promise<Channel> {
+		if (typeof obj === 'string') {
+			let res = await client.fetch('get', `/channels/${obj}`);
+			let body: IChannel = res.data;
 
-		let channel = new Channel(body.type, id);
+			return this.from(client, body);
+		}
+
+		let channel = new Channel(obj.type, obj.id);
 		channel.client = client;
 
 		if (client.cacheMessages) {
 			channel.messages = new Collection();			
 		}
 
-		if (body.type == ChannelType.DM) {
+		if (obj.type == ChannelType.DM) {
 			channel.users = [
-				await client.fetchUser(body.users[0]),
-				await client.fetchUser(body.users[1])
+				await client.fetchUser(obj.users[0]),
+				await client.fetchUser(obj.users[1])
 			];
 		}
 

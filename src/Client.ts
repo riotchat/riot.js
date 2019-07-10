@@ -5,13 +5,14 @@ import { TypedEventEmitter } from '@elderapo/typed-event-emitter';
 
 import * as IAuth from './api/v1/auth';
 import * as IUser from './api/v1/users';
-import get from './util/fetch';
+import get, { ENDPOINT } from './util/fetch';
 
 import { Channel } from './internal/Channel';
 import { User } from './internal/User';
 import { Packets, ClientPackets } from './api/ws/v1';
 import { Message } from './internal/Message';
 import Collection from './util/Collection';
+import { Group } from './internal/Group';
 
 interface ClientEvents {
 	connected: void
@@ -37,14 +38,13 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 	accessToken?: string;
 	user: User;
 
-	private knownUsers: Collection<string, IUser.FriendType>;
 	channels: Collection<string, Channel>;
 	users: Collection<string, User>;
+	groups: Collection<string, Group>;
 
 	constructor() {
 		super();
 
-		this.knownUsers = new Collection();
 		this.channels = new Collection();
 		this.users = new Collection();
 	}
@@ -60,6 +60,11 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 
 	private async handle(packet: Packets) {
 		switch (packet.type) {
+			case 'authenticated':
+				{
+					this.emit('connected', undefined);
+				}
+				break;
 			case 'message':
 				{
 					let message = await Message.from(this, packet);
@@ -77,6 +82,10 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 				}
 				break;
 		}
+	}
+
+	static async register(email: string, username: string, password: string) {
+
 	}
 
 	async login(email: string, password: string): Promise<void | Login2FA>;
@@ -105,13 +114,13 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 						});
 
 						let body: IAuth.Authenticate2FA = res.data;
-						this.sync(body.accessToken);
+						await this.sync(body.accessToken);
 					};
 				} else {
-					this.sync(body.accessToken);
+					await this.sync(body.accessToken);
 				}
 			} else {
-				this.sync(id);
+				await this.sync(id);
 			}
 		} catch (e) {
 			this.emit('error', e);
@@ -120,33 +129,31 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 
 	private async sync(accessToken?: string) {
 		if (accessToken) this.accessToken = accessToken;
+		
+		this.user = await this.fetchUser('@me');
+		await this.fetchFriends(true);
 
-		let ws = <RiotSocket> new WebSocket('ws://' + '86.11.153.158:3000' /*ENDPOINT*/ + '/ws');
+		let dms = await this.fetch('get', '/users/@me/channels?sync=true');
+		for (let i=0;i<dms.data.length;i++) {
+			let channel = await Channel.from(this, dms.data[i]);
+			this.channels.set(channel.id, channel);
+		}
+
+		let ws = <RiotSocket> new WebSocket('ws://' + ENDPOINT);
 		ws.sendPacket = data => ws.send(JSON.stringify(data));
 		ws.onopen = $ => ws.sendPacket({ type: 'authenticate', token: <string> this.accessToken });
 		ws.onmessage = ev => this.handle(
 			JSON.parse(ev.data as string)
 		);
-		
-		this.user = await this.fetchUser('@me');
-		await this.fetchFriends();
 
-		let dms = await this.fetch('get', '/users/@me/channels');
-		let channels: {id: string, user: string}[] = dms.data;
-
-		for (let i=0;i<channels.length;i++) {
-			let raw = channels[i];
-			await this.fetchChannel(raw.id);
-		}
-
-		this.emit('connected', undefined);
+		this.ws = ws;
 	}
 
-	async fetchChannel(id: string) {
+	async fetchChannel(id: string, obj?: any) {
 		let channel = this.channels.get(id);
 		if (channel) return channel;
 
-		channel = await Channel.from(this, id);
+		channel = await Channel.from(this, obj || id);
 		this.channels.set(id, channel);
 
 		return channel;
@@ -164,31 +171,18 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		return user;
 	}
 
-	async fetchFriends() {
-		let req = await this.fetch('get', '/users/@me/friends');
-		let body: IUser.Friends = req.data;
+	async fetchFriends(includeSelf: boolean = false) {
+		let req = await this.fetch('get', '/users/@me/friends?sync=true');
+		let body: IUser.User[] = req.data;
 
 		let users: User[] = [];
 		for (let i=0;i<body.length;i++) {
-			let entry = body[i];
-			this.knownUsers.set(entry.user, entry.type);
-			users.push(await this.fetchUser(entry.user));
+			users.push(await User.from(this, body[i]));
 		}
+
+		users.forEach(user => this.users.set(user.id, user));
 
 		return users;
-	}
-
-	getFriendStatus(userId: string): IUser.FriendType {
-		if (!this.user || userId === this.user.id) {
-			return 'self';
-		}
-
-		let type = this.knownUsers.get(userId);
-		if (type) {
-			return type;
-		}
-
-		return 'unknown';
 	}
 
 };

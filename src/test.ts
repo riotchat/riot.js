@@ -11,11 +11,11 @@ client.on('connected', async () => {
 
 	//client.users.forEach((user) => console.log(`${user.username} is ${user.relation}`));
 
-	let channel = client.channels.array()[0];
-	if (channel) {
-		let msgs = await channel.fetchMessages();
+	//let channel = client.channels.array()[0];
+	//if (channel) {
+	//	let msgs = await channel.fetchMessages();
 		//msgs[0].edit('yeet');
-	}
+	//}
 });
 
 client.on('message', (msg) => {

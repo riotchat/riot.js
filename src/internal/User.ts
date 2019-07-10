@@ -19,16 +19,18 @@ export class User {
 		this.relation = 'unknown';
 	}
 
-	static async from(client: Client, id: string) {
-		let res = await client.fetch('get', `/users/${id}`);
-		let body: IUser = res.data;
+	static async from(client: Client, obj: string | IUser): Promise<User> {
+		if (typeof obj === 'string') {
+			let res = await client.fetch('get', `/users/${obj}`);
+			return this.from(client, res.data);
+		}
 
-		let user = new User(body.username, body.id);
+		let user = new User(obj.username, obj.id);
 		user.client = client;
-		user.email = body.email;
-		user.status = body.status;
-		user.avatarURL = body.avatarURL;
-		user.relation = client.getFriendStatus(user.id);
+		user.email = obj.email;
+		user.status = obj.status;
+		user.avatarURL = obj.avatarURL;
+		user.relation = obj.relation;
 
 		return user;
 	}

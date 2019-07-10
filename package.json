@@ -12,7 +12,7 @@
     "lodash": "^4.17.11"
   },
   "scripts": {
-    "dev": "tsc-watch --onSuccess \"node dist/test.js\""
+    "dev": "tsc-watch --onSuccess \"node --inspect=9222 dist/test.js\""
   },
   "devDependencies": {
     "@types/lodash": "^4.14.134",
