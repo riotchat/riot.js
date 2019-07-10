@@ -86,7 +86,16 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 	}
 
 	static async register(email: string, username: string, password: string) {
+		let req = await get('post', '/auth/create', {
+			data: {
+				email,
+				username,
+				password
+			}
+		});
+		let body: IAuth.UserCreation = req.data;
 
+		return body.accessToken;
 	}
 
 	async login(email: string, password: string): Promise<void | Login2FA>;
@@ -156,6 +165,17 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		this.ws = ws;
 	}
 
+	private connect() {
+		let ws = <RiotSocket> new WebSocket('ws://' + ENDPOINT);
+		ws.sendPacket = data => ws.send(JSON.stringify(data));
+		ws.onopen = $ => ws.sendPacket({ type: 'authenticate', token: <string> this.accessToken });
+		ws.onmessage = ev => this.handle(
+			JSON.parse(ev.data as string)
+		);
+
+		this.ws = ws;
+	}
+
 	async fetchChannel(id: string, obj?: any) {
 		let channel = this.channels.get(id);
 		if (channel) return channel;
@@ -188,7 +208,7 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		return group;
 	}
 
-	async fetchFriends(includeSelf: boolean = false) {
+	private async fetchFriends(includeSelf: boolean = false) {
 		let req = await this.fetch('get', '/users/@me/friends?sync=true');
 		let body: IUser.User[] = req.data;
 

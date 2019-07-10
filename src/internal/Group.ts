@@ -47,7 +47,11 @@ export class Group {
 			group.members.set(id, await client.fetchUser(id));
 		}
 
-		group.displayTitle = group.members.array().map(x => x.username).join(', ');
+		group.displayTitle = group.members
+			.array()
+			.filter(x => x.id !== client.user.id)
+			.map(x => x.username)
+			.join(', ');
 
 		return group;
 	}
