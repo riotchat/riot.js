@@ -17,7 +17,7 @@ client.on('reconnected', async () => {
 client.on('message', (msg) => {
 	console.log(`[MESSAGE] ${msg.content} in ${msg.channel.id} from ${msg.author.id}`);
 	if (msg.content == 'do a thing') {
-		msg.channel.send('yes');
+		setTimeout(() => msg.channel.send('yes'), 1000);
 	}
 });
 

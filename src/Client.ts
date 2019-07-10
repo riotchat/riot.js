@@ -176,7 +176,7 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 	private connect() {
 		clearInterval(this.pingPong);
 
-		let ws = <RiotSocket> new WebSocket('ws://' + ENDPOINT);
+		let ws = <RiotSocket> new WebSocket('wss://' + ENDPOINT);
 		ws.sendPacket = data => ws.send(JSON.stringify(data));
 
 		ws.onopen = $ => ws.sendPacket({ type: 'authenticate', token: <string> this.accessToken });
