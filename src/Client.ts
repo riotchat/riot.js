@@ -16,6 +16,7 @@ import { Group } from './internal/Group';
 
 interface ClientEvents {
 	connected: void
+	reconnected: void
 	error: Error | string
 
 	message: Message
@@ -32,7 +33,9 @@ interface RiotSocket extends WebSocket {
 
 export class Client extends TypedEventEmitter<ClientEvents> {
 
-	private ws?: RiotSocket;
+	private ws: RiotSocket;
+	private pingPong: NodeJS.Timeout;
+	private retry = 1e3;
 	
 	cacheMessages: boolean = true;
 	accessToken?: string;
@@ -59,11 +62,23 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		}));
 	}
 
+	private previouslyConnected: boolean;
 	private async handle(packet: Packets) {
 		switch (packet.type) {
+			case 'ping':
+				this.ws.sendPacket({
+					type: 'pong'
+				});
+				break;
 			case 'authenticated':
 				{
+					if (this.previouslyConnected) {
+						this.emit('reconnected', undefined);
+						return;
+					}
+
 					this.emit('connected', undefined);
+					this.previouslyConnected = true;
 				}
 				break;
 			case 'message':
@@ -155,25 +170,31 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 			this.groups.set(group.id, group);
 		}
 
-		let ws = <RiotSocket> new WebSocket('ws://' + ENDPOINT);
-		ws.sendPacket = data => ws.send(JSON.stringify(data));
-		ws.onopen = $ => ws.sendPacket({ type: 'authenticate', token: <string> this.accessToken });
-		ws.onmessage = ev => this.handle(
-			JSON.parse(ev.data as string)
-		);
-
-		this.ws = ws;
+		this.connect();
 	}
 
 	private connect() {
+		clearInterval(this.pingPong);
+
 		let ws = <RiotSocket> new WebSocket('ws://' + ENDPOINT);
 		ws.sendPacket = data => ws.send(JSON.stringify(data));
+
 		ws.onopen = $ => ws.sendPacket({ type: 'authenticate', token: <string> this.accessToken });
+		ws.onclose = $ => {
+			clearInterval(this.pingPong);
+			setTimeout(() => this.connect(), this.retry);
+		};
+
 		ws.onmessage = ev => this.handle(
 			JSON.parse(ev.data as string)
 		);
 
 		this.ws = ws;
+		this.pingPong = setInterval(() => {
+			ws.sendPacket({
+				type: 'ping'
+			});
+		}, 2000);
 	}
 
 	async fetchChannel(id: string, obj?: any) {

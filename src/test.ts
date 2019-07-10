@@ -4,6 +4,14 @@ let client = new Client();
 
 client.on('connected', async () => {
 	console.log('Logged in as: ' + client.user.username);
+
+	let m = await client.channels.array()[0].fetchMessages();
+
+	console.log(m);
+});
+
+client.on('reconnected', async () => {
+	console.log('Reconnected to RIOT after websocket was lost');
 });
 
 client.on('message', (msg) => {
