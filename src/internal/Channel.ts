@@ -8,28 +8,9 @@ import { Group } from './Group';
 export class Channel {
 
 	client: Client;
-
-	type: ChannelType;
 	id: string;
 
 	messages?: Collection<string, Message>;
-
-	// group + guild
-	description?: string;
-
-	// group
-	group?: Group;
-
-	// guild
-	// guild: Guild;
-
-	// DMs
-	users?: [User, User];
-
-	constructor(type: ChannelType, id: string) {
-		this.type = type;
-		this.id = id;
-	}
 
 	static async from(client: Client, obj: string | IChannel): Promise<Channel> {
 		if (typeof obj === 'string') {
@@ -39,15 +20,22 @@ export class Channel {
 			return this.from(client, body);
 		}
 
-		let channel = new Channel(obj.type, obj.id);
+		let channel;
+		switch (obj.type) {
+			case ChannelType.DM:    channel = new DMChannel(); break;
+			case ChannelType.GROUP: channel = new GroupChannel(); break;
+			default:				channel = new GuildChannel(); break;
+		}
+
+		channel.id = obj.id;
 		channel.client = client;
 
 		if (client.cacheMessages) {
 			channel.messages = new Collection();			
 		}
 
-		if (obj.type == ChannelType.DM) {
-			channel.users = [
+		if (obj.type === ChannelType.DM) {
+			(<DMChannel> channel).users = [
 				await client.fetchUser(obj.users[0]),
 				await client.fetchUser(obj.users[1])
 			];
@@ -88,3 +76,19 @@ export class Channel {
 	}
 
 };
+
+export class DMChannel extends Channel {
+
+	description: string;
+	users: [User, User];
+
+};
+
+export class GroupChannel extends Channel {
+
+	description: string;
+	group: Group;
+
+};
+
+export class GuildChannel extends Channel { };

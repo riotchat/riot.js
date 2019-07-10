@@ -1,6 +1,6 @@
 import { Client } from '../Client';
 
-import { Channel } from './Channel';
+import { Channel, GroupChannel } from './Channel';
 import { User } from './User';
 
 import { Group as IGroup } from '../api/v1/users';
@@ -12,8 +12,9 @@ export class Group {
 
 	id: string;
 	title: string;
+	displayTitle: string;
 
-	channel: Channel;
+	channel: GroupChannel;
 	createdAt: Date;
 
 	owner: User;
@@ -35,7 +36,7 @@ export class Group {
 		let group = new Group(obj.id, obj.title);
 		group.client = client;
 
-		group.channel = await client.fetchChannel(obj.channel.id, obj.channel);
+		group.channel = await client.fetchChannel(obj.channel.id, obj.channel) as GroupChannel;
 		group.channel.group = group;
 		group.createdAt = new Date(obj.createdAt);
 		group.owner = await client.fetchUser(obj.owner);
@@ -45,6 +46,8 @@ export class Group {
 			let id = obj.members[i];
 			group.members.set(id, await client.fetchUser(id));
 		}
+
+		group.displayTitle = group.members.array().map(x => x.username).join(', ');
 
 		return group;
 	}
