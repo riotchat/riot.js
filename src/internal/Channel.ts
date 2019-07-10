@@ -3,6 +3,7 @@ import { Client } from '../Client';
 import { User } from './User';
 import { Message } from './Message';
 import Collection from '../util/Collection';
+import { Group } from './Group';
 
 export class Channel {
 
@@ -17,7 +18,7 @@ export class Channel {
 	description?: string;
 
 	// group
-	// group: DMGroup;
+	group?: Group;
 
 	// guild
 	// guild: Guild;

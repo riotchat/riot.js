@@ -1,4 +1,5 @@
 import { Client } from './Client';
+import { ChannelType } from './api/v1/channels';
 
 let client = new Client();
 

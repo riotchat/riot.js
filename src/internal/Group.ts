@@ -36,6 +36,7 @@ export class Group {
 		group.client = client;
 
 		group.channel = await client.fetchChannel(obj.channel.id, obj.channel);
+		group.channel.group = group;
 		group.createdAt = new Date(obj.createdAt);
 		group.owner = await client.fetchUser(obj.owner);
 
