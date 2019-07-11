@@ -91,6 +91,7 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 				{
 					let user = await this.fetchUser(packet.user);
 					user.status = packet.status || user.status;
+					if (packet.activity) user.activity = packet.activity;
 					user.relation = packet.relation || user.relation;
 					user.avatarURL = packet.avatarURL || user.avatarURL;
 

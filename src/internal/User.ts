@@ -1,4 +1,4 @@
-import { User as IUser, Status, FriendType, AddFriend, RemoveFriend, CreateDM, UpdateUser } from '../api/v1/users';
+import { User as IUser, Status, FriendType, AddFriend, RemoveFriend, CreateDM, UpdateUser, Activity } from '../api/v1/users';
 import { Client } from '../Client';
 
 export class User {
@@ -10,8 +10,13 @@ export class User {
 	relation: FriendType;
 
 	email?: string;
-	status?: Status;
-	avatarURL?: string;
+
+	status: Status;
+	activity: {
+		type: Activity
+		custom?: string
+	};
+	avatarURL: string;
 
 	constructor(username: string, id: string) {
 		this.username = username;
@@ -30,6 +35,7 @@ export class User {
 		user.email = obj.email;
 		user.status = obj.status;
 		user.avatarURL = obj.avatarURL;
+		user.activity = obj.activity;
 		user.relation = obj.relation;
 
 		return user;
@@ -60,7 +66,7 @@ export class User {
 		return this.client.fetchChannel(body.id);
 	}
 
-	async setStatus(status: Omit<Status, 'offline'>) {
+	async setStatus(status: Status) {
 		this.status = status as any;
 
 		let res = await this.client.fetch('put', `/users/@me`, {
@@ -72,6 +78,21 @@ export class User {
 
 		this.status = body.status;
 		return body.status;
+	}
+
+	async setActivity(type: Activity, custom?: string) {
+		let res = await this.client.fetch('put', `/users/@me`, {
+			data: {
+				activity: {
+					type,
+					custom
+				}
+			}
+		});
+		let body: UpdateUser = res.data;
+
+		this.activity = body.activity;
+		return body.activity;
 	}
 
 };
