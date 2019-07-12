@@ -1,4 +1,4 @@
-import { User as IUser, Status, FriendType, AddFriend, RemoveFriend, CreateDM, UpdateUser, Activity } from '../api/v1/users';
+import { User as IUser, Status, FriendType, AddFriend, RemoveFriend, CreateDM, UpdateUser, Activity, UserActivity } from '../api/v1/users';
 import { Client } from '../Client';
 
 export class User {
@@ -12,10 +12,7 @@ export class User {
 	email?: string;
 
 	status: Status;
-	activity: {
-		type: Activity
-		custom?: string
-	};
+	activity: UserActivity;
 	avatarURL: string;
 
 	constructor(username: string, id: string) {
@@ -79,6 +76,9 @@ export class User {
 		this.status = body.status;
 		return body.status;
 	}
+
+	async setActivity(type: Omit<Activity, 'None'>, custom: string): Promise<UserActivity>;
+	async setActivity(type: Activity.None): Promise<UserActivity>;
 
 	async setActivity(type: Activity, custom?: string) {
 		let res = await this.client.fetch('put', `/users/@me`, {

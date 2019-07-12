@@ -53,6 +53,11 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		this.groups = new Collection();
 	}
 
+	close() {
+		if (this.ws) this.ws.close();
+		clearInterval(this.pingPong);
+	}
+
 	fetch(method: 'get' | 'post' | 'put' | 'delete', url: string, opt: AxiosRequestConfig = {}): Promise<AxiosResponse> {
 		console.debug('[fetch ' + method.toUpperCase() + ' ' + url + ']');
 		return get(method, url, defaultsDeep(opt, {
