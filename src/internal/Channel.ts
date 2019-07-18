@@ -35,10 +35,14 @@ export class Channel {
 		}
 
 		if (obj.type === ChannelType.DM) {
-			(<DMChannel> channel).users = [
+			channel = (<DMChannel> channel);
+			channel.users = [
 				await client.fetchUser(obj.users[0]),
 				await client.fetchUser(obj.users[1])
 			];
+			channel.recipient =
+				channel.users[0] === client.user ?
+					channel.users[1] : channel.users[0];
 		}
 
 		return channel;
@@ -80,6 +84,7 @@ export class Channel {
 export class DMChannel extends Channel {
 
 	description: string;
+	recipient: User;
 	users: [User, User];
 
 };
