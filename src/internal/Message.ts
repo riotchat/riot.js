@@ -3,7 +3,7 @@ import { Client } from '../Client';
 import { Channel } from './Channel';
 import { User } from './User';
 
-import { Message as IMessage, EditMessage } from '../api/v1/channels';
+import { Message as IMessage, EditMessage } from '../api/v1/api/channels';
 
 export class Message {
 

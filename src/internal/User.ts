@@ -1,4 +1,4 @@
-import { User as IUser, Status, FriendType, AddFriend, RemoveFriend, CreateDM, UpdateUser, Activity, UserActivity } from '../api/v1/users';
+import { User as IUser, Status, FriendType, AddFriend, RemoveFriend, CreateDM, UpdateUser, Activity, UserActivity } from '../api/v1/api/users';
 import { Client } from '../Client';
 
 export class User {

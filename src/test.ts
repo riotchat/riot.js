@@ -1,5 +1,5 @@
 import { Client } from './Client';
-import { Activity } from './api/v1/users';
+import { Activity } from './api/v1/api/users';
 
 let client = new Client();
 

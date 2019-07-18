@@ -1,4 +1,4 @@
-import { ChannelType, Channel as IChannel, SendMessage, GetMessages } from '../api/v1/channels';
+import { ChannelType, Channel as IChannel, SendMessage, GetMessages } from '../api/v1/api/channels';
 import { Client } from '../Client';
 import { User } from './User';
 import { Message } from './Message';

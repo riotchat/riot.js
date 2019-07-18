@@ -3,7 +3,7 @@ import { Client } from '../Client';
 import { Channel, GroupChannel } from './Channel';
 import { User } from './User';
 
-import { Group as IGroup } from '../api/v1/users';
+import { Group as IGroup } from '../api/v1/api/users';
 import { Collection } from '..';
 
 export class Group {
