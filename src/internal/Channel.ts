@@ -56,6 +56,8 @@ export class Channel {
 		let message = new Message(nonce, content, false);
 		message.author = this.client.user;
 		message.channel = this;
+		message.createdAt = new Date();
+		message.updatedAt = message.createdAt;
 
 		this.messages.set(nonce, message);
 
