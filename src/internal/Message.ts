@@ -11,6 +11,7 @@ export class Message {
 
 	id: string;
 	content: string;
+	real: boolean;
 
 	createdAt: Date;
 	updatedAt: Date;
@@ -18,13 +19,14 @@ export class Message {
 	channel: Channel;
 	author: User;
 
-	constructor(id: string, content: string) {
+	constructor(id: string, content: string, real: boolean) {
 		this.id = id;
 		this.content = content;
+		this.real = real;
 	}
 
 	static async from(client: Client, data: IMessage) {
-		let message = new Message(data.id, data.content);
+		let message = new Message(data.id, data.content, true);
 		message.client = client;
 
 		message.createdAt = new Date(data.createdAt);

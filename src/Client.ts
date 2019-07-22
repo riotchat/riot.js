@@ -94,6 +94,10 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 			case 'message':
 				{
 					let message = await Message.from(this, packet);
+					let msgs = message.channel.messages;
+					if (packet.nonce && msgs) {
+						msgs.delete(packet.nonce);
+					}
 					this.emit(+message.createdAt === +message.updatedAt ? 'message' : 'messageUpdate', message);
 				}
 				break;

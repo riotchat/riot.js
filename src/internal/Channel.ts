@@ -4,6 +4,7 @@ import { User } from './User';
 import { Message } from './Message';
 import Collection from '../util/Collection';
 import { Group } from './Group';
+import { ulid } from 'ulid';
 
 export class Channel {
 
@@ -48,17 +49,32 @@ export class Channel {
 		return channel;
 	}
 
+	preload(content: string) {
+		if (!this.messages) return () => {};
+
+		let nonce = ulid();
+		let message = new Message(nonce, content, false);
+		message.author = this.client.user;
+		message.channel = this;
+
+		this.messages.set(nonce, message);
+
+		return nonce;
+	}
+
 	async send(content: string) {
 		content = content.substring(0, 2000);
+		let nonce = this.preload(content);
 
 		let res = await this.client.fetch('post', `/channels/${this.id}/messages`, {
 			data: {
-				content
+				content,
+				nonce
 			}
 		});
 		let body: SendMessage = res.data;
 
-		let message = new Message(body.id, content);
+		let message = new Message(body.id, content, true);
 		message.author = this.client.user;
 		message.channel = this;
 
