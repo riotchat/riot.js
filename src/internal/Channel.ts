@@ -5,6 +5,7 @@ import { Message } from './Message';
 import Collection from '../util/Collection';
 import { Group } from './Group';
 import { ulid } from 'ulid';
+import { Guild } from './Guild';
 
 export class Channel {
 
@@ -13,7 +14,7 @@ export class Channel {
 
 	messages?: Collection<string, Message>;
 
-	static async from(client: Client, obj: string | IChannel): Promise<Channel> {
+	static async from(client: Client, obj: string | IChannel, parent?: Group | Guild): Promise<Channel> {
 		if (typeof obj === 'string') {
 			let res = await client.fetch('get', `/channels/${obj}`);
 			let body: IChannel = res.data;
@@ -44,13 +45,22 @@ export class Channel {
 			channel.recipient =
 				channel.users[0] === client.user ?
 					channel.users[1] : channel.users[0];
+		} else if (obj.type === ChannelType.GROUP) {
+			channel = (<GroupChannel> channel);
+			channel.description = obj.description;
+			channel.group = parent as Group || await client.fetchGroup(obj.group);
+		} else if (obj.type === ChannelType.GUILD) {
+			channel = (<GuildChannel> channel);
+			channel.description = obj.description;
+			channel.name = obj.name;
+			channel.guild = parent as Guild || await client.fetchGuild(obj.guild);
 		}
 
 		return channel;
 	}
 
-	preload(content: string) {
-		if (!this.messages) return () => {};
+	preload(content: string): string | undefined {
+		if (!this.messages) return;
 
 		let nonce = ulid();
 		let message = new Message(nonce, content, false);
@@ -83,10 +93,21 @@ export class Channel {
 		return message;
 	}
 
-	async fetchMessages() {
+	async fetchMessages(opts?: {
+		before?: string,
+		after?: string,
+		limit?: number
+	}) {
+		const params: string[] = [];
 		let messages: Message[] = [];
 
-		let res = await this.client.fetch('get', `/channels/${this.id}/messages`);
+		if (opts) {
+			opts.before && params.push('before=' + opts.before);
+			opts.after && params.push('after=' + opts.after);
+			opts.limit && params.push('limit=' + opts.limit);
+		}
+
+		let res = await this.client.fetch('get', `/channels/${this.id}/messages?${params.join('@')}`);
 		let body: GetMessages = res.data;
 
 		for (let i=0;i<body.length;i++) {
@@ -101,7 +122,6 @@ export class Channel {
 
 export class DMChannel extends Channel {
 
-	description: string;
 	recipient: User;
 	users: [User, User];
 
@@ -114,4 +134,10 @@ export class GroupChannel extends Channel {
 
 };
 
-export class GuildChannel extends Channel { };
+export class GuildChannel extends Channel {
+
+	description: string;
+	guild: Guild;
+	name: string;
+
+};

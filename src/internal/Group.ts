@@ -23,6 +23,7 @@ export class Group {
 	constructor(id: string, title: string) {
 		this.id = id;
 		this.title = title;
+		this.members = new Collection();
 	}
 
 	static async from(client: Client, obj: string | IGroup): Promise<Group> {
@@ -36,12 +37,11 @@ export class Group {
 		let group = new Group(obj.id, obj.title);
 		group.client = client;
 
-		group.channel = await client.fetchChannel(obj.channel.id, obj.channel) as GroupChannel;
+		group.channel = await client.fetchChannel(obj.channel.id, obj.channel, group) as GroupChannel;
 		group.channel.group = group;
 		group.createdAt = new Date(obj.createdAt);
 		group.owner = await client.fetchUser(obj.owner);
 
-		group.members = new Collection();
 		for (let i=0;i<obj.members.length;i++) {
 			let id = obj.members[i];
 			group.members.set(id, await client.fetchUser(id));

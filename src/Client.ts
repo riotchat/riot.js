@@ -14,6 +14,7 @@ import { Message } from './internal/Message';
 import Collection from './util/Collection';
 import { Group } from './internal/Group';
 import { ErrorObject } from './api/v1/errors';
+import { Guild } from './internal/Guild';
 
 interface ClientEvents {
 	connected: void
@@ -45,6 +46,7 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 	channels: Collection<string, Channel>;
 	users: Collection<string, User>;
 	groups: Collection<string, Group>;
+	guilds: Collection<string, Guild>;
 
 	constructor() {
 		super();
@@ -52,6 +54,7 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		this.channels = new Collection();
 		this.users = new Collection();
 		this.groups = new Collection();
+		this.guilds = new Collection();
 	}
 
 	close() {
@@ -153,13 +156,13 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 					});
 
 					let body: IAuth.Authenticate2FA = res.data;
-					await this.sync(body.accessToken);
+					this.sync(body.accessToken);
 				};
 			} else {
-				await this.sync(body.accessToken);
+				this.sync(body.accessToken);
 			}
 		} else {
-			await this.sync(id);
+			this.sync(id);
 		}
 	}
 
@@ -180,6 +183,12 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 			for (let i=0;i<groups.data.length;i++) {
 				let group = await Group.from(this, groups.data[i]);
 				this.groups.set(group.id, group);
+			}
+
+			let guilds = await this.fetch('get', '/guilds/list');
+			for (let i=0;i<guilds.data.length;i++) {
+				let guild = await Guild.from(this, guilds.data[i]);
+				this.guilds.set(guild.id, guild);
 			}
 
 			this.connect();
@@ -212,11 +221,11 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		}, 2000);
 	}
 
-	async fetchChannel(id: string, obj?: any) {
+	async fetchChannel(id: string, obj?: any, parent?: Group | Guild) {
 		let channel = this.channels.get(id);
 		if (channel) return channel;
 
-		channel = await Channel.from(this, obj || id);
+		channel = await Channel.from(this, obj || id, parent);
 		this.channels.set(id, channel);
 
 		return channel;
@@ -242,6 +251,16 @@ export class Client extends TypedEventEmitter<ClientEvents> {
 		this.groups.set(id, group);
 
 		return group;
+	}
+
+	async fetchGuild(id: string) {
+		let guild = this.guilds.get(id);
+		if (guild) return guild;
+
+		guild = await Guild.from(this, id);
+		this.guilds.set(id, guild);
+
+		return guild;
 	}
 
 	private async fetchFriends(includeSelf: boolean = false) {
